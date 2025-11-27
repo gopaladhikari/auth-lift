@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { Button, Input, Checkbox, Link, addToast } from "@heroui/react";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Checkbox } from "@heroui/checkbox";
+import { Link } from "@heroui/link";
+import { addToast } from "@heroui/toast";
 import { Icon } from "@iconify/react";
 import { authClient } from "@/lib/auth-client";
 

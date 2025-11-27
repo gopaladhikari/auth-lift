@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { Menu } from "@/components/navbar";
-import "./globals.css";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Better Auth",
@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <Providers>
           <Menu />
-          {children}
+          <main>{children}</main>
         </Providers>
       </body>
     </html>
