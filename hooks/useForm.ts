@@ -1,39 +1,85 @@
-import { useState } from "react";
+import { useReducer } from "react";
+
+interface States<T = unknown> {
+  data: T | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+type Action<T = unknown> =
+  | { type: "PENDING" }
+  | { type: "RESOLVED"; payload: T }
+  | { type: "REJECTED"; payload: Error }
+  | { type: "CUSTOM"; payload: States }
+  | { type: "RESET" };
+
+const initialState: States = {
+  data: null,
+  isLoading: false,
+  error: null,
+};
+
+function reducer(state: States, action: Action): States {
+  switch (action.type) {
+    case "PENDING":
+      return {
+        data: null,
+        isLoading: true,
+        error: null,
+      };
+
+    case "REJECTED":
+      return {
+        data: null,
+        isLoading: false,
+        error: action.payload,
+      };
+
+    case "RESOLVED":
+      return {
+        data: action.payload,
+        isLoading: false,
+        error: null,
+      };
+
+    case "RESET":
+      return initialState;
+
+    case "CUSTOM":
+      return action.payload;
+
+    default:
+      return state;
+  }
+}
 
 export const useForm = <T = unknown>() => {
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   function handleSubmit(
-    callback: (e: React.FormEvent<HTMLFormElement>) => Promise<T | void> | void
+    callback: (e: React.FormEvent<HTMLFormElement>) => Promise<T>
   ) {
     return async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
-      setIsLoading(true);
-      setError(null);
-      setData(null);
+      dispatch({ type: "PENDING" });
 
       try {
         const result = await callback(e);
 
-        if (result) setData(result);
+        if (result) dispatch({ type: "RESOLVED", payload: result });
       } catch (err) {
-        console.error("Form Submission Error:", err);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
+        dispatch({
+          type: "REJECTED",
+          payload: err instanceof Error ? err : new Error(String(err)),
+        });
       }
     };
   }
 
   return {
-    data,
-    isLoading,
-    error,
-    setError,
-    setData,
+    ...state,
+    dispatch,
     handleSubmit,
   };
 };

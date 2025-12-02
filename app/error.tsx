@@ -13,7 +13,7 @@ export default function Page({
 }) {
   return (
     <AnimatePresence>
-      <motion.main
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
@@ -21,6 +21,7 @@ export default function Page({
           duration: 0.5,
           type: "tween",
         }}
+        className="mt-36"
       >
         <div className="flex h-full w-full items-center justify-center">
           <div className="rounded-large bg-content1 shadow-small flex flex-col items-center justify-center p-12">
@@ -33,12 +34,12 @@ export default function Page({
               Our team has been notified and we&apos;ll do our best to resolve
               the issue as soon as possible.
             </div>
-            <Button className="mt-4" color="primary">
-              <Link href="/">Go back home</Link>
+            <Button className="mt-4" color="primary" as={Link} href="/">
+              Go back home
             </Button>
           </div>
         </div>
-      </motion.main>
+      </motion.div>
     </AnimatePresence>
   );
 }

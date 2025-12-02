@@ -1,26 +1,42 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Link } from "@heroui/link";
-import { Icon } from "@iconify/react";
+import { Form } from "@heroui/form";
+import { Divider } from "@heroui/divider";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useForm } from "@/hooks/useForm";
 import { addToast } from "@heroui/toast";
+import { Icon } from "@iconify/react";
+import { useToggle } from "@/hooks/useToggle";
+import { useForm } from "@/hooks/useForm";
 
 export function SignUpForm() {
-  const { error, setError, isLoading, handleSubmit } = useForm();
+  const { error, isLoading, handleSubmit, dispatch } = useForm();
 
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const errors: string[] = [];
+
+  if (password.length < 4) {
+    errors.push("Password must be 4 characters or more.");
+  }
+  if ((password.match(/[A-Z]/g) || []).length < 1) {
+    errors.push("Password must include at least 1 upper case letter");
+  }
+  if ((password.match(/[^a-z]/gi) || []).length < 1) {
+    errors.push("Password must include at least 1 symbol.");
+  }
+
+  const [isVisible, setIsVisible] = useToggle();
+
+  const [isConfirmVisible, setIsConfirmVisible] = useToggle();
 
   const router = useRouter();
-
-  const toggleVisibility = () => setIsVisible(!isVisible);
-  const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const formData = Object.fromEntries(new FormData(e.currentTarget));
@@ -37,7 +53,11 @@ export function SignUpForm() {
           router.push("/");
         },
         onError(context) {
-          setError(new Error(context.error.message));
+          dispatch({
+            type: "REJECTED",
+            payload: context.error,
+          });
+
           addToast({
             title: context.error.message,
             variant: "bordered",
@@ -49,15 +69,20 @@ export function SignUpForm() {
   };
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="rounded-large flex w-full max-w-sm flex-col gap-4 px-8 pt-6 pb-10">
-        <p className="pb-4 text-left text-3xl font-semibold">
-          Sign Up
-          <span aria-label="emoji" className="ml-2" role="img">
-            👋
-          </span>
-        </p>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <div className="flex h-full w-full items-center justify-center my-12">
+      <div className="rounded-large bg-content1 shadow-small flex w-full max-w-sm flex-col gap-4 px-8 pt-6 pb-10">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-large font-medium">Sign up to your account</h1>
+          <p className="text-small text-default-500">
+            to continue to better-auth
+          </p>
+        </div>
+
+        <Form
+          className="flex flex-col gap-3"
+          validationBehavior="native"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Input
             isRequired
             label="Username"
@@ -79,7 +104,7 @@ export function SignUpForm() {
           <Input
             isRequired
             endContent={
-              <button type="button" onClick={toggleVisibility}>
+              <button type="button" onClick={setIsVisible}>
                 {isVisible ? (
                   <Icon
                     className="text-default-400 pointer-events-none text-2xl"
@@ -99,11 +124,20 @@ export function SignUpForm() {
             placeholder="Enter your password"
             type={isVisible ? "text" : "password"}
             variant="bordered"
+            value={password}
+            onValueChange={setPassword}
+            errorMessage={() => (
+              <ul>
+                {errors?.map((error, i) => (
+                  <li key={i}>{error}</li>
+                ))}
+              </ul>
+            )}
           />
           <Input
             isRequired
             endContent={
-              <button type="button" onClick={toggleConfirmVisibility}>
+              <button type="button" onClick={setIsConfirmVisible}>
                 {isConfirmVisible ? (
                   <Icon
                     className="text-default-400 pointer-events-none text-2xl"
@@ -123,6 +157,11 @@ export function SignUpForm() {
             placeholder="Confirm your password"
             type={isConfirmVisible ? "text" : "password"}
             variant="bordered"
+            value={confirmPassword}
+            onValueChange={setConfirmPassword}
+            validate={(value) => {
+              if (value !== password) return "Passwords do not match";
+            }}
           />
           <Checkbox isRequired className="py-4" size="sm">
             I agree with the&nbsp;
@@ -141,13 +180,41 @@ export function SignUpForm() {
 
           {error && <p className="text-small text-danger">{error.message}</p>}
 
-          <Button color="primary" type="submit" isLoading={isLoading}>
-            Sign Up
+          <Button
+            color="primary"
+            type="submit"
+            className="w-full"
+            isLoading={isLoading}
+          >
+            {isLoading ? "Signing up..." : "Sign Up"}
           </Button>
-        </form>
+        </Form>
+
+        <div className="flex items-center gap-4 py-2">
+          <Divider className="flex-1" />
+          <p className="text-tiny text-default-500 shrink-0">OR</p>
+          <Divider className="flex-1" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button
+            startContent={<Icon icon="flat-color-icons:google" width={24} />}
+            variant="bordered"
+          >
+            Continue with Google
+          </Button>
+          <Button
+            startContent={
+              <Icon className="text-default-500" icon="fe:github" width={24} />
+            }
+            variant="bordered"
+          >
+            Continue with Github
+          </Button>
+        </div>
         <p className="text-small text-center">
+          Need to create an account?&nbsp;
           <Link href="#" size="sm">
-            Already have an account? Log In
+            Sign Up
           </Link>
         </p>
       </div>

@@ -10,62 +10,54 @@ import { Divider } from "@heroui/divider";
 import { Icon } from "@iconify/react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useToggle } from "@/hooks/useToggle";
+import { useForm } from "@/hooks/useForm";
 
 export function LoginForm() {
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [isVisible, setIsVisible] = useToggle();
+  const { isLoading, handleSubmit, error, dispatch } = useForm();
 
   const router = useRouter();
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     const formData = Object.fromEntries(new FormData(event.currentTarget));
 
     const rememberMe = typeof formData.remember === "string";
 
-    setError(null);
-
-    try {
-      setLoading(true);
-      const { data, error } = await authClient.signIn.email(
-        {
-          email: formData.email as string,
-          password: formData.password as string,
-          rememberMe,
+    await authClient.signIn.email(
+      {
+        email: formData.email as string,
+        password: formData.password as string,
+        rememberMe,
+      },
+      {
+        onSuccess() {
+          router.push("/");
         },
-        {
-          onSuccess() {
-            router.push("/");
-          },
-        }
-      );
-
-      if (error) throw error;
-
-      console.log(data);
-    } catch (error) {
-      setError(error as Error);
-    } finally {
-      setLoading(false);
-    }
+        onError(context) {
+          dispatch({
+            type: "REJECTED",
+            payload: context.error,
+          });
+        },
+      }
+    );
   };
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
+    <div className="flex h-full w-full items-center justify-center my-12">
       <div className="rounded-large bg-content1 shadow-small flex w-full max-w-sm flex-col gap-4 px-8 pt-6 pb-10">
         <div className="flex flex-col gap-1">
           <h1 className="text-large font-medium">Sign in to your account</h1>
-          <p className="text-small text-default-500">to continue to Acme</p>
+          <p className="text-small text-default-500">
+            to continue to better-auth
+          </p>
         </div>
 
         <Form
           className="flex flex-col gap-3"
           validationBehavior="native"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
         >
           <Input
             isRequired
@@ -78,7 +70,7 @@ export function LoginForm() {
           <Input
             isRequired
             endContent={
-              <button type="button" onClick={toggleVisibility}>
+              <button type="button" onClick={setIsVisible}>
                 {isVisible ? (
                   <Icon
                     className="text-default-400 pointer-events-none text-2xl"
@@ -110,7 +102,7 @@ export function LoginForm() {
             className="w-full"
             color="primary"
             type="submit"
-            isLoading={loading}
+            isLoading={isLoading}
           >
             Sign In
           </Button>
