@@ -8,13 +8,13 @@ import { Link } from "@heroui/link";
 import { Form } from "@heroui/form";
 import { Divider } from "@heroui/divider";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { useToggle } from "@/hooks/useToggle";
 import { useForm } from "@/hooks/useForm";
+import { addToast } from "@heroui/react";
 
 export function SignUpForm() {
-  const { error, isLoading, handleSubmit } = useForm();
+  const { error, isLoading, handleSubmit, data } = useForm();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,8 +33,6 @@ export function SignUpForm() {
   const [isVisible, setIsVisible] = useToggle();
 
   const [isConfirmVisible, setIsConfirmVisible] = useToggle();
-
-  const router = useRouter();
 
   const googleSignUp = () => {
     authClient.signIn.social({
@@ -57,12 +55,18 @@ export function SignUpForm() {
       {
         onSuccess() {
           form.reset();
-          router.push("/");
         },
       }
     );
 
     if (error) throw error;
+
+    addToast({
+      title: "Verification email sent",
+      description:
+        "Please check your inbox and confirm your email address to complete the sign up process.",
+      color: "success",
+    });
 
     return data;
   };
@@ -183,6 +187,11 @@ export function SignUpForm() {
           </Checkbox>
 
           {error && <p className="text-small text-danger">{error.message}</p>}
+          {data && typeof data === "object" && "user" in data ? (
+            <p className="text-sm text-success">
+              Verfication email has been sent to your email{" "}
+            </p>
+          ) : null}
 
           <Button
             color="primary"
