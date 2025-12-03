@@ -9,28 +9,26 @@ import { Form } from "@heroui/form";
 import { Divider } from "@heroui/divider";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { addToast } from "@heroui/toast";
 import { Icon } from "@iconify/react";
 import { useToggle } from "@/hooks/useToggle";
 import { useForm } from "@/hooks/useForm";
 
 export function SignUpForm() {
-  const { error, isLoading, handleSubmit, dispatch } = useForm();
+  const { error, isLoading, handleSubmit, data } = useForm();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const errors: string[] = [];
 
-  if (password.length < 4) {
+  if (password.length < 4)
     errors.push("Password must be 4 characters or more.");
-  }
-  if ((password.match(/[A-Z]/g) || []).length < 1) {
+
+  if ((password.match(/[A-Z]/g) || []).length < 1)
     errors.push("Password must include at least 1 upper case letter");
-  }
-  if ((password.match(/[^a-z]/gi) || []).length < 1) {
+
+  if ((password.match(/[^a-z]/gi) || []).length < 1)
     errors.push("Password must include at least 1 symbol.");
-  }
 
   const [isVisible, setIsVisible] = useToggle();
 
@@ -43,7 +41,7 @@ export function SignUpForm() {
 
     const form = e.currentTarget;
 
-    return await authClient.signUp.email(
+    const { data, error } = await authClient.signUp.email(
       {
         email: formData.email as string,
         password: formData.password as string,
@@ -55,20 +53,12 @@ export function SignUpForm() {
           form.reset();
           router.push("/");
         },
-        onError(context) {
-          dispatch({
-            type: "REJECTED",
-            payload: context.error,
-          });
-
-          addToast({
-            title: context.error.message,
-            variant: "bordered",
-            color: "danger",
-          });
-        },
       }
     );
+
+    if (error) throw error;
+
+    return data;
   };
 
   return (

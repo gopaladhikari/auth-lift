@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 
-interface States<T = unknown> {
+interface States<T> {
   data: T | null;
   isLoading: boolean;
   error: Error | null;
@@ -10,95 +10,63 @@ type Action<T = unknown> =
   | { type: "PENDING" }
   | { type: "RESOLVED"; payload: T }
   | { type: "REJECTED"; payload: Error }
-  | { type: "CUSTOM"; payload: States }
+  | { type: "CUSTOM"; payload: States<T> }
   | { type: "RESET" };
 
-function reducer(state: States, action: Action): States {
+function reducer<T>(state: States<T>, action: Action<T>): States<T> {
   switch (action.type) {
     case "PENDING":
-      return {
-        data: null,
-        isLoading: true,
-        error: null,
-      };
+      return { ...state, data: null, isLoading: true, error: null };
 
     case "REJECTED":
-      return {
-        data: null,
-        isLoading: false,
-        error: action.payload,
-      };
+      return { ...state, data: null, isLoading: false, error: action.payload };
 
     case "RESOLVED":
-      return {
-        data: action.payload,
-        isLoading: false,
-        error: null,
-      };
+      return { ...state, data: action.payload, isLoading: false, error: null };
 
     case "RESET":
-      return initialState;
-
-    case "CUSTOM":
-      return action.payload;
+      return initialState as States<T>;
 
     default:
       return state;
   }
 }
 
-const initialState: States = {
+const initialState: States<unknown> = {
   data: null,
   isLoading: false,
   error: null,
 };
 
-export const useForm = <T = unknown>() => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export const useForm = <T>() => {
+  const [state, dispatch] = useReducer(reducer<T>, initialState as States<T>);
 
-  function handleSubmit(
-    callback: (event: React.FormEvent<HTMLFormElement>) => Promise<T>
+  function handleSubmit<R extends T>(
+    callback: (event: React.FormEvent<HTMLFormElement>) => Promise<R>
   ) {
     return async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
+      const form = e?.currentTarget;
+
       dispatch({ type: "PENDING" });
 
       try {
-        const result = await callback(e);
+        const data: T = await callback(e);
 
-        if (
-          result &&
-          typeof result === "object" &&
-          "error" in result &&
-          result.error
-        ) {
-          const errorObj =
-            result.error instanceof Error
-              ? result.error
-              : new Error(
-                  (result.error as Error)?.message || "An error occurred"
-                );
+        dispatch({ type: "RESOLVED", payload: data });
+        form?.reset();
 
-          dispatch({
-            type: "REJECTED",
-            payload: errorObj,
-          });
-
-          return result;
-        }
-
-        if (result && typeof result === "object" && "data" in result) {
-          dispatch({ type: "RESOLVED", payload: result.data });
-          return result;
-        }
-
-        dispatch({ type: "RESOLVED", payload: result });
-        return result;
+        return data;
       } catch (err) {
+        const error =
+          err instanceof Error
+            ? err
+            : new Error((err as Error)?.message || "Something went wrong");
+
         dispatch({
           type: "REJECTED",
-          payload: err instanceof Error ? err : new Error(String(err)),
+          payload: error,
         });
       }
     };
@@ -106,7 +74,10 @@ export const useForm = <T = unknown>() => {
 
   return {
     ...state,
-    dispatch,
+    data: state.data as T | null,
+    isLoading: state.isLoading,
+    error: state.error,
     handleSubmit,
+    reset: () => dispatch({ type: "RESET" }),
   };
 };

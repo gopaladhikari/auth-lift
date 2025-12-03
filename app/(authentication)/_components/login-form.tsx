@@ -15,18 +15,16 @@ import { useForm } from "@/hooks/useForm";
 
 export function LoginForm() {
   const [isVisible, setIsVisible] = useToggle();
-  const { isLoading, handleSubmit, error, dispatch } = useForm();
+  const { isLoading, handleSubmit, error } = useForm();
 
   const router = useRouter();
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     const formData = Object.fromEntries(new FormData(event.currentTarget));
 
-    const form = event.currentTarget;
-
     const rememberMe = typeof formData.remember === "string";
 
-    return await authClient.signIn.email(
+    const { data, error } = await authClient.signIn.email(
       {
         email: formData.email as string,
         password: formData.password as string,
@@ -34,17 +32,14 @@ export function LoginForm() {
       },
       {
         onSuccess() {
-          form.reset();
           router.push("/");
-        },
-        onError(context) {
-          dispatch({
-            type: "REJECTED",
-            payload: context.error,
-          });
         },
       }
     );
+
+    if (error) throw error;
+
+    return data;
   };
 
   return (
@@ -92,6 +87,8 @@ export function LoginForm() {
             name="password"
             placeholder="Enter your password"
             type={isVisible ? "text" : "password"}
+            onCopy={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
             variant="bordered"
           />
           <div className="flex w-full items-center justify-between px-1 py-2">
