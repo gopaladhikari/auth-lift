@@ -19,6 +19,12 @@ export function LoginForm() {
 
   const router = useRouter();
 
+  const googleSignIn = () => {
+    authClient.signIn.social({
+      provider: "google",
+    });
+  };
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     const formData = Object.fromEntries(new FormData(event.currentTarget));
 
@@ -120,16 +126,9 @@ export function LoginForm() {
           <Button
             startContent={<Icon icon="flat-color-icons:google" width={24} />}
             variant="bordered"
+            onPress={googleSignIn}
           >
             Continue with Google
-          </Button>
-          <Button
-            startContent={
-              <Icon className="text-default-500" icon="fe:github" width={24} />
-            }
-            variant="bordered"
-          >
-            Continue with Github
           </Button>
         </div>
         <p className="text-small text-center">

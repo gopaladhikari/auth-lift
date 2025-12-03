@@ -14,25 +14,28 @@ export function User() {
       </div>
     );
 
-  return (
-    <div className="flex h-full w-full items-center justify-center">
-      {data?.user ? (
-        <div>
-          <h1>Hello {data.user.name}</h1>
-          <p>Your email is {data.user.email}</p>
+  if (data)
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        {data?.user ? (
+          <div>
+            <h1>Hello {data.user.name}</h1>
+            <p>Your email is {data.user.email}</p>
 
-          <Button
-            color="danger"
-            onPress={async () => await authClient.signOut()}
-          >
-            Sign out
-          </Button>
-        </div>
-      ) : (
-        <div>
-          <h1>No user session</h1>
-        </div>
-      )}
-    </div>
-  );
+            <Button
+              color="danger"
+              onPress={async () => await authClient.signOut()}
+            >
+              Sign out
+            </Button>
+          </div>
+        ) : (
+          <div>
+            <h1>No user session</h1>
+          </div>
+        )}
+      </div>
+    );
+
+  return null;
 }

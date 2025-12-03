@@ -14,7 +14,7 @@ import { useToggle } from "@/hooks/useToggle";
 import { useForm } from "@/hooks/useForm";
 
 export function SignUpForm() {
-  const { error, isLoading, handleSubmit, data } = useForm();
+  const { error, isLoading, handleSubmit } = useForm();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,6 +35,12 @@ export function SignUpForm() {
   const [isConfirmVisible, setIsConfirmVisible] = useToggle();
 
   const router = useRouter();
+
+  const googleSignUp = () => {
+    authClient.signIn.social({
+      provider: "google",
+    });
+  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const formData = Object.fromEntries(new FormData(e.currentTarget));
@@ -197,16 +203,9 @@ export function SignUpForm() {
           <Button
             startContent={<Icon icon="flat-color-icons:google" width={24} />}
             variant="bordered"
+            onPress={googleSignUp}
           >
             Continue with Google
-          </Button>
-          <Button
-            startContent={
-              <Icon className="text-default-500" icon="fe:github" width={24} />
-            }
-            variant="bordered"
-          >
-            Continue with Github
           </Button>
         </div>
         <p className="text-small text-center">
